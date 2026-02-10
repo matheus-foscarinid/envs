@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`envs` is a Go CLI tool for managing multiple `.env` files (e.g., `.env.dev`, `.env.prod`). It tracks the active environment in `.envx.json` and provides commands to initialize, list, and switch between environments. Built with Cobra CLI framework.
+`envs` is a Go CLI tool for managing multiple `.env` files (e.g., `.env.dev`, `.env.prod`). It tracks the active environment in `.envs.json` and provides commands to initialize, list, and switch between environments. Built with Cobra CLI framework.
 
 ## Build & Run
 
@@ -24,7 +24,7 @@ Entry point (`main.go`) calls `cmd.Execute()`. Commands live in `cmd/` and deleg
 
 - **cmd/**: Cobra command definitions (root, init, list)
 - **internal/manager/**: core business logic (listing envs, resolving active env)
-- **internal/config/**: config struct and read/write for `.envx.json`
+- **internal/config/**: config struct and read/write for `.envs.json`
 - **internal/env/**: operations on `.env` files (load, write, copy)
 - **internal/constants/**: shared file name constants (`SampleFile`, `DotEnvFile`, `ConfigFile`)
 
@@ -32,6 +32,6 @@ Data flows: CLI command → `cmd/` handler → `internal/manager/` → `internal
 
 ## Key Files
 
-- `.envx.json`: runtime config tracking version and active environment name
+- `.envs.json`: runtime config tracking version and active environment name
 - `.env.sample`: template for environment variables
 - `.env`: the active environment file (generated, git-ignored)
