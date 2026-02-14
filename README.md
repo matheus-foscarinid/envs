@@ -1,4 +1,4 @@
-# envs
+# envs (WIP)
 
 A CLI tool to manage multiple `.env` files. Switch between environments (dev, prod, staging) with a single command.
 
@@ -15,12 +15,3 @@ envs new prod --empty      # create .env.prod without copying sample
 envs list                  # list all environments (* marks active)
 envs use dev               # switch active environment to dev
 ```
-
-
-## TODO
-
-- [ ] Implement `use` command (switch active environment, copy to `.env`)
-- [ ] Implement `current` command (show active environment)
-- [ ] Implement `set` / `get` commands (manage individual env vars)
-- [ ] Implement `validate` command (check env against sample)
-- [ ] Add tests for `new` and `use` commands
