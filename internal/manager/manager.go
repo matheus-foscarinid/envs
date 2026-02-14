@@ -47,9 +47,39 @@ func createIfMissing(path string, label string, create func() error) {
 	}
 }
 
-func (m *Manager) NewEnv(name string) error {
+// NewEnv creates a new environment file, optionally copying from the sample file
+func NewEnv(name string, empty bool) error {
+	fmt.Println("⛰️ Creating new environment:", name)
+
+	envFile := fmt.Sprintf(".env.%s", name)
+
+	if _, err := os.Stat(envFile); !os.IsNotExist(err) {
+		fmt.Printf("environment file %s already exists\nskipping...\n", name)
+		return nil
+	}
+
+	if _, err := os.Create(envFile); err != nil {
+		return fmt.Errorf("error creating environment file: %w", err)
+	}
+
+	if !empty {
+		if _, err := os.Stat(constants.SampleFile); os.IsNotExist(err) {
+			fmt.Println("sample file not found, creating empty environment file...")
+		} else {
+			sampleContent, err := os.ReadFile(constants.SampleFile)
+			if err != nil {
+				return fmt.Errorf("error reading sample file: %w", err)
+			}
+			if err := os.WriteFile(envFile, sampleContent, 0644); err != nil {
+				return fmt.Errorf("error writing environment file: %w", err)
+			}
+		}
+	}
+
+	fmt.Printf("✅ .env.%s created successfully\n", name)
 	return nil
 }
+
 func (m *Manager) Use(name string) error {
 	return nil
 }
