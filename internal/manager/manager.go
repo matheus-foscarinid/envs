@@ -13,6 +13,25 @@ type Manager struct {
 	cfg *config.Config
 }
 
+func createIfMissing(path string, label string, create func() error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		fmt.Printf("Creating default %s file...\n", label)
+		if err := create(); err != nil {
+			fmt.Printf("Error creating %s file: %v\n", label, err)
+		}
+	} else {
+		fmt.Printf("✅ %s file already exists, skipping...\n", label)
+	}
+}
+
+func copyFile(source, destination string) error {
+	sourceFile, err := os.ReadFile(source)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(destination, sourceFile, 0644)
+}
+
 // Init sets up envs in the current directory, creating config, sample, and env files
 func Init() error {
 	fmt.Println("⛰️ Initializing envs...")
@@ -36,17 +55,6 @@ func Init() error {
 	return nil
 }
 
-func createIfMissing(path string, label string, create func() error) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		fmt.Printf("Creating default %s file...\n", label)
-		if err := create(); err != nil {
-			fmt.Printf("Error creating %s file: %v\n", label, err)
-		}
-	} else {
-		fmt.Printf("✅ %s file already exists, skipping...\n", label)
-	}
-}
-
 // NewEnv creates a new environment file, optionally copying from the sample file
 func NewEnv(name string, empty bool) error {
 	fmt.Println("⛰️ Creating new environment:", name)
@@ -66,11 +74,7 @@ func NewEnv(name string, empty bool) error {
 		if _, err := os.Stat(constants.SampleFile); os.IsNotExist(err) {
 			fmt.Println("sample file not found, creating empty environment file...")
 		} else {
-			sampleContent, err := os.ReadFile(constants.SampleFile)
-			if err != nil {
-				return fmt.Errorf("error reading sample file: %w", err)
-			}
-			if err := os.WriteFile(envFile, sampleContent, 0644); err != nil {
+			if err := copyFile(constants.SampleFile, envFile); err != nil {
 				return fmt.Errorf("error writing environment file: %w", err)
 			}
 		}
@@ -80,19 +84,41 @@ func NewEnv(name string, empty bool) error {
 	return nil
 }
 
-func (m *Manager) Use(name string) error {
+func Use(name string) error {
+	fmt.Println("⛰️ Switching active environment to:", name)
+
+	cfg, err := config.Load(constants.ConfigFile)
+	if err != nil {
+		return err
+	}
+	cfg.Active = name
+
+	err = copyFile(fmt.Sprintf(".env.%s", name), constants.DotEnvFile)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("✅ Active environment switched to:", name)
 	return nil
 }
-func (m *Manager) Current() error {
+
+func Current() error {
+	cfg, err := config.Load(constants.ConfigFile)
+	if err != nil {
+		return err
+	}
+	currentEnv := cfg.Active
+	fmt.Println("✅ Active environment:", currentEnv)
 	return nil
 }
-func (m *Manager) Set(key,value string) error {
+
+func Set(key,value string) error {
 	return nil
 }
-func (m *Manager) Get(key string) error {
+func Get(key string) error {
 	return nil
 }
-func (m *Manager) Validate(name string) error {
+func Validate(name string) error {
 	return nil
 }
 
@@ -120,10 +146,10 @@ func ListEnvs() ([]string, error) {
 	}
 
 	for _, file := range filteredFiles {
-		if file == currentEnv {
+		if file == fmt.Sprintf(".env.%s", currentEnv) {
 			fmt.Println("*", file)
 		} else {
-			fmt.Println(file)
+			fmt.Println(" ", file)
 		}
 	}
 
