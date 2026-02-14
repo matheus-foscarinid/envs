@@ -15,3 +15,8 @@ envs new prod --empty      # create .env.prod without copying sample
 envs list                  # list all environments (* marks active)
 envs use dev               # switch active environment to dev
 ```
+
+## TODOs:
+[ ] Add tests to missing commands
+[ ] Add TUI to view the current commands
+[ ] Add option to overwritte all commands OR only the defined ones
