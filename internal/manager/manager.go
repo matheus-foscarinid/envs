@@ -145,8 +145,35 @@ func Get(key string) error {
 	fmt.Println(val)
 	return nil
 }
-func Validate(name string) error {
-	return nil
+// Validate checks that every key in .env.sample is present in the active .env
+func Validate() error {
+	sampleVars, err := env.Load(constants.SampleFile)
+	if err != nil {
+		return fmt.Errorf("could not load %s: %w", constants.SampleFile, err)
+	}
+
+	envVars, err := env.Load(constants.DotEnvFile)
+	if err != nil {
+		return fmt.Errorf("could not load %s: %w", constants.DotEnvFile, err)
+	}
+
+	var missing []string
+	for key := range sampleVars {
+		if _, ok := envVars[key]; !ok {
+			missing = append(missing, key)
+		}
+	}
+
+	if len(missing) == 0 {
+		fmt.Println("✅ All sample keys are set in .env")
+		return nil
+	}
+
+	fmt.Printf("⚠️  Missing %d key(s) in %s:\n", len(missing), constants.DotEnvFile)
+	for _, key := range missing {
+		fmt.Printf("  - %s\n", key)
+	}
+	return fmt.Errorf("validation failed: %d missing key(s)", len(missing))
 }
 
 func ListEnvs() ([]string, error) {
