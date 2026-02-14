@@ -7,6 +7,7 @@ import (
 
 	"github.com/matheus-foscarinid/envs/internal/config"
 	"github.com/matheus-foscarinid/envs/internal/constants"
+	"github.com/matheus-foscarinid/envs/internal/env"
 )
 
 type Manager struct {
@@ -112,10 +113,36 @@ func Current() error {
 	return nil
 }
 
-func Set(key,value string) error {
+// Set updates or adds a key-value pair in the active .env file
+func Set(key, value string) error {
+	envMap, err := env.Load(constants.DotEnvFile)
+	if err != nil {
+		return fmt.Errorf("error loading .env file: %w", err)
+	}
+
+	envMap[key] = value
+	if err := env.Write(constants.DotEnvFile, envMap); err != nil {
+		return fmt.Errorf("error writing .env file: %w", err)
+	}
+
+	fmt.Printf("✅ %s=%s\n", key, value)
 	return nil
 }
+
+// Get prints the value of a key from the active .env file
 func Get(key string) error {
+	envMap, err := env.Load(constants.DotEnvFile)
+	if err != nil {
+		return fmt.Errorf("error loading .env file: %w", err)
+	}
+
+	val, ok := envMap[key]
+	if !ok {
+		fmt.Printf("key %q not found in .env\n", key)
+		return nil
+	}
+
+	fmt.Println(val)
 	return nil
 }
 func Validate(name string) error {
