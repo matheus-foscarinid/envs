@@ -2,6 +2,7 @@ package manager
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/matheus-foscarinid/envs/internal/config"
@@ -12,17 +13,62 @@ type Manager struct {
 	cfg *config.Config
 }
 
-func currentEnv() (string, error) {
-	// get the active env from the config file
-	cfg, err := config.Load(constants.ConfigFile)
-	if err != nil {
-		return "", err
+// Init sets up envs in the current directory, creating config, sample, and env files
+func Init() error {
+	fmt.Println("⛰️ Initializing envs...")
+	fmt.Println()
+
+	createIfMissing(constants.ConfigFile, "config", func() error {
+		defaultCfg := config.Config{Version: 1, Active: "default"}
+		return config.Write(constants.ConfigFile, defaultCfg)
+	})
+	createIfMissing(constants.SampleFile, "sample", func() error {
+		_, err := os.Create(constants.SampleFile)
+		return err
+	})
+	createIfMissing(constants.DotEnvFile, "env", func() error {
+		_, err := os.Create(constants.DotEnvFile)
+		return err
+	})
+
+	fmt.Println()
+	fmt.Println("⛰️ Envs initialized successfully!")
+	return nil
+}
+
+func createIfMissing(path string, label string, create func() error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		fmt.Printf("Creating default %s file...\n", label)
+		if err := create(); err != nil {
+			fmt.Printf("Error creating %s file: %v\n", label, err)
+		}
+	} else {
+		fmt.Printf("✅ %s file already exists, skipping...\n", label)
 	}
-	return cfg.Active, nil
+}
+
+func (m *Manager) NewEnv(name string) error {
+	return nil
+}
+func (m *Manager) Use(name string) error {
+	return nil
+}
+func (m *Manager) Current() error {
+	return nil
+}
+func (m *Manager) Set(key,value string) error {
+	return nil
+}
+func (m *Manager) Get(key string) error {
+	return nil
+}
+func (m *Manager) Validate(name string) error {
+	return nil
 }
 
 func ListEnvs() ([]string, error) {
 	pattern := ".env.*"
+
 	files, err := filepath.Glob(pattern)
 	filteredFiles := []string{}
 	for _, file := range files {
@@ -32,10 +78,11 @@ func ListEnvs() ([]string, error) {
 		filteredFiles = append(filteredFiles, file)
 	}
 
-	currentEnv, err := currentEnv()
+	cfg, err := config.Load(constants.ConfigFile)
 	if err != nil {
 		return nil, err
 	}
+	currentEnv := cfg.Active
 
 	if len(filteredFiles) == 0 {
 		fmt.Println("No envs found")
